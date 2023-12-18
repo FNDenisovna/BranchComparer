@@ -2,6 +2,7 @@ package comparer
 
 import (
 	"branchcomparer/internal/domain"
+	versioncomparer "branchcomparer/internal/versionComparer"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -116,13 +117,18 @@ func (c *Comparer) getDiffs(pm1 *map[string]map[string]string, pm2 *map[string]m
 			for p1, ver1 := range v1 {
 				if ver2, ok := v2[p1]; !ok {
 					arch.Packages = append(arch.Packages, p1)
+				} else {
 					if addVersionDiff {
-						if ver1 > ver2 {
+						compRes, err := versioncomparer.Compare(ver1, ver2)
+						if err != nil {
+							fmt.Printf("Can't compare versions: %s, %s. Arch: %v, package: %v\n", ver1, ver2, k, p1)
+							continue
+						}
+						if compRes > 0 {
 							archVer.Packages = append(arch.Packages, p1)
 						}
 					}
 				}
-
 			}
 		}
 		if len(arch.Packages) > 0 {

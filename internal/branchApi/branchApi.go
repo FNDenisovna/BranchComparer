@@ -37,7 +37,7 @@ type BranchPackage struct {
 
 func (ba *BranchApi) GetPackages(branch string) ([]domain.Package, error) {
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: 10 * time.Second,
 	}
 	r, err := client.Get(ba.url + branch)
 	if err != nil {
