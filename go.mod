@@ -1,3 +1,3 @@
-module branchComparer
+module branchcomparer
 
 go 1.21.1

@@ -1,11 +1,12 @@
 package branchapi
 
 import (
-	"branchComparer/internal/domain"
+	"branchcomparer/internal/domain"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 type BranchApi struct {
@@ -35,7 +36,10 @@ type BranchPackage struct {
 }
 
 func (ba *BranchApi) GetPackages(branch string) ([]domain.Package, error) {
-	r, err := http.Get(ba.url)
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	r, err := client.Get(ba.url + branch)
 	if err != nil {
 		err = fmt.Errorf("Request to url (%s) is failed. Error: %w", ba.url, err)
 		return nil, err

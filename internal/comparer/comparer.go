@@ -1,7 +1,7 @@
 package comparer
 
 import (
-	"branchComparer/internal/domain"
+	"branchcomparer/internal/domain"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -69,10 +69,12 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 	wg.Add(2)
 	go func() {
 		resultStruct.DiffPackege1, resultStruct.DiffPackegeVer = c.getDiffs(&p1map, &p2map, true)
+		wg.Done()
 	}()
 
 	go func() {
 		resultStruct.DiffPackege2, _ = c.getDiffs(&p2map, &p1map, false)
+		wg.Done()
 	}()
 
 	wg.Wait()
@@ -80,8 +82,8 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 	return
 }
 
-func (c *Comparer) doPackegeMap(pmap *map[string]map[string]string, p []domain.Package) (err error) {
-	for _, p := range p {
+func (c *Comparer) doPackegeMap(pmap *map[string]map[string]string, ps []domain.Package) (err error) {
+	for _, p := range ps {
 		if arch, ok := (*pmap)[p.Arch]; ok {
 			if _, ok := arch[p.Name]; ok {
 				continue
@@ -136,13 +138,13 @@ func (c *Comparer) getDiffs(pm1 *map[string]map[string]string, pm2 *map[string]m
 
 type CompareResult struct {
 	mu             sync.Mutex
-	DiffPackege1   []Arch `json:"diffPackege1"`
-	DiffPackege2   []Arch `json:"diffPackege2"`
-	DiffPackegeVer []Arch `json:"diffPackegeVer"`
+	DiffPackege1   []Arch `json:"diffpackage1"`
+	DiffPackege2   []Arch `json:"diffpackage2"`
+	DiffPackegeVer []Arch `json:"diffpackagever"`
 }
 
 type Arch struct {
-	Name     string   `json:"name"`
+	Name     string   `json:"archname"`
 	Packages []string `json:"packages"`
 }
 

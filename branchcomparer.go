@@ -1,8 +1,8 @@
-package branchcomparer
+package main
 
 import (
-	branchapi "branchComparer/internal/branchApi"
-	comparer "branchComparer/internal/comparer"
+	branchapi "branchcomparer/internal/branchApi"
+	comparer "branchcomparer/internal/comparer"
 	"flag"
 	"fmt"
 )
@@ -14,8 +14,8 @@ var (
 )
 
 func init() {
-	flag.StringVar(&branch1, "branch1", "", "First branch for compare")
-	flag.StringVar(&branch2, "branch2", "", "First branch for compare")
+	flag.StringVar(&branch1, "branch1", "sisyphus", "First branch for compare")
+	flag.StringVar(&branch2, "branch2", "p10", "First branch for compare")
 	flag.Parse()
 
 	url = "https://rdb.altlinux.org/api/export/branch_binary_packages/"
@@ -43,4 +43,15 @@ func main() {
 	}
 
 	fmt.Println(string(result[:]))
+}
+
+type ExtComparerType struct{}
+
+var ExtComparer ExtComparerType
+
+func (ec ExtComparerType) Compare(b1 string, b2 string) {
+	branch1 = b1
+	branch2 = b2
+	url = "https://rdb.altlinux.org/api/export/branch_binary_packages/"
+	main()
 }
