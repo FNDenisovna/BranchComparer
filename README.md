@@ -2,9 +2,9 @@
 
 # For using as plugin:
 
-# 1.Build plugin
+# Build plugin
 # go build -buildmode=plugin -o branchcomparer.so branchcomparer.go
-# 2. Copy to the library with shared libs
+# 2. Copy to the your library with shared libs
 # sudo cp ./lib.so /usr/local/lib
 # 3. Update cashe of shared libs
 # sudo ldconfig
@@ -42,5 +42,3 @@
 
     // 4. используем загруженный плагин
     comparer.Compare()
-
-# For using as plugin:
