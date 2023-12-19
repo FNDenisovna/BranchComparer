@@ -2,6 +2,7 @@ package comparer
 
 import (
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -82,12 +83,7 @@ func TestComparer_getDiffs(t *testing.T) {
 						Packages: []string{"package2", "package3"},
 					},
 				},
-				diffPackegeVer: []Arch{
-					{
-						Name:     "amd64",
-						Packages: make([]string, 0),
-					},
-				},
+				diffPackegeVer: make([]Arch, 0),
 			},
 			wantErr: false,
 		},
@@ -96,6 +92,12 @@ func TestComparer_getDiffs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			comp := &Comparer{}
 			d1, dv := comp.getDiffs(&tt.args.m1, &tt.args.m2, tt.args.addVersionDiff)
+			for _, v := range d1 {
+				sort.Strings(v.Packages)
+			}
+			for _, v := range dv {
+				sort.Strings(v.Packages)
+			}
 
 			if !reflect.DeepEqual(d1, tt.wantRes.diffPackege1) {
 				t.Errorf("getDiffs() return diffsBranch1 = %v, want %v", d1, tt.wantRes.diffPackege1)
