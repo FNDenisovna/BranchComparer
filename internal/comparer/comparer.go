@@ -12,6 +12,7 @@ type Comparer struct {
 	b1    string
 	b2    string
 	api   Api
+	mu    sync.RWMutex
 	p1map *domain.PackageMap
 	p2map *domain.PackageMap
 }
@@ -19,12 +20,6 @@ type Comparer struct {
 type Api interface {
 	GetPackages(branch string) ([]domain.Package, error)
 }
-
-/*type Package struct {
-	Name    string
-	Version string
-	Arch    string
-}*/
 
 func New(_b1 string, _b2 string, _api Api) *Comparer {
 	return &Comparer{
@@ -36,27 +31,45 @@ func New(_b1 string, _b2 string, _api Api) *Comparer {
 	}
 }
 
+type CompareResult struct {
+	DiffPackege1   []Arch `json:"diffpackage1"`
+	DiffPackege2   []Arch `json:"diffpackage2"`
+	DiffPackegeVer []Arch `json:"diffpackagever"`
+}
+
+type Arch struct {
+	Name     string   `json:"archname"`
+	Packages []string `json:"packages"`
+}
+
 func (c *Comparer) Compare() (resultJson []byte, err error) {
 	var wg sync.WaitGroup
 	wg.Add(2)
-
+	var err1, err2 error
 	go func(pmap *domain.PackageMap) {
-		p := make([]domain.Package, 0, 0)
-		p, err = c.api.GetPackages(c.b1)
-		err = c.doPackegeMap(pmap, p)
+		p, err1 := c.api.GetPackages(c.b1)
+		if err1 != nil {
+			return
+		}
+		err1 = c.doPackegeMap(pmap, p)
 		wg.Done()
 	}(c.p1map)
 
 	go func(pmap *domain.PackageMap) {
-		p := make([]domain.Package, 0, 0)
-		p, err = c.api.GetPackages(c.b2)
-		err = c.doPackegeMap(pmap, p)
+		p, err2 := c.api.GetPackages(c.b2)
+		if err2 != nil {
+			return
+		}
+		err2 = c.doPackegeMap(pmap, p)
 		wg.Done()
 	}(c.p2map)
 
 	wg.Wait()
-	if err != nil {
-		err = fmt.Errorf("Getting branches packages is failed. Error: %w", err)
+	if err1 != nil {
+		err = fmt.Errorf("Getting branches packages is failed. Error: \n%w", err1)
+		return resultJson, err
+	} else if err2 != nil {
+		err = fmt.Errorf("Getting branches packages is failed. Error: \n%w", err2)
 		return resultJson, err
 	}
 
@@ -139,18 +152,6 @@ func (c *Comparer) getDiffs(pm1 *domain.PackageMap, pm2 *domain.PackageMap, addV
 	}
 
 	return
-}
-
-type CompareResult struct {
-	mu             sync.Mutex
-	DiffPackege1   []Arch `json:"diffpackage1"`
-	DiffPackege2   []Arch `json:"diffpackage2"`
-	DiffPackegeVer []Arch `json:"diffpackagever"`
-}
-
-type Arch struct {
-	Name     string   `json:"archname"`
-	Packages []string `json:"packages"`
 }
 
 /*

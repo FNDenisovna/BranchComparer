@@ -24,17 +24,6 @@ type BranchResponse struct {
 	Packages []domain.Package `json:"packages"`
 }
 
-type BranchPackage struct {
-	Name      string `json:"name"`
-	Epoch     int    `json:"epoch"`
-	Version   string `json:"version"`
-	Release   string `json:"release"`
-	Arch      string `json:"arch"`
-	Disttag   string `json:"disttag"`
-	Buildtime int    `json:"buildtime"`
-	Source    string `json:"source"`
-}
-
 func (ba *BranchApi) GetPackages(branch string) ([]domain.Package, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
