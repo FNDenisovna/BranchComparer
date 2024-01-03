@@ -1,6 +1,7 @@
 package comparer
 
 import (
+	"branchcomparer/internal/domain"
 	"reflect"
 	"sort"
 	"testing"
@@ -8,8 +9,8 @@ import (
 
 func TestComparer_getDiffs(t *testing.T) {
 	type args struct {
-		m1             map[string]map[string]string
-		m2             map[string]map[string]string
+		m1             *domain.PackageMap
+		m2             *domain.PackageMap
 		addVersionDiff bool
 	}
 	type res struct {
@@ -25,18 +26,22 @@ func TestComparer_getDiffs(t *testing.T) {
 		{
 			name: "Ok1",
 			args: args{
-				m1: map[string]map[string]string{
-					"amd64": {
-						"package1": "26.7.9",
-						"package2": "0.9.12",
-						"package3": "32.1.0",
+				m1: &domain.PackageMap{
+					Arch: map[string]map[string]string{
+						"amd64": {
+							"package1": "26.7.9",
+							"package2": "0.9.12",
+							"package3": "32.1.0",
+						},
 					},
 				},
-				m2: map[string]map[string]string{
-					"amd64": {
-						"package1": "26.6.9",
-						"package4": "0.9.12",
-						"package5": "32.1.0",
+				m2: &domain.PackageMap{
+					Arch: map[string]map[string]string{
+						"amd64": {
+							"package1": "26.6.9",
+							"package4": "0.9.12",
+							"package5": "32.1.0",
+						},
 					},
 				},
 				addVersionDiff: true,
@@ -60,18 +65,22 @@ func TestComparer_getDiffs(t *testing.T) {
 		{
 			name: "Ok2",
 			args: args{
-				m1: map[string]map[string]string{
-					"amd64": {
-						"package1": "8.7.9",
-						"package2": "0.9.12",
-						"package3": "32.1.0",
+				m1: &domain.PackageMap{
+					Arch: map[string]map[string]string{
+						"amd64": {
+							"package1": "8.7.9",
+							"package2": "0.9.12",
+							"package3": "32.1.0",
+						},
 					},
 				},
-				m2: map[string]map[string]string{
-					"amd64": {
-						"package1": "26.6.9",
-						"package4": "0.9.12",
-						"package5": "32.1.0",
+				m2: &domain.PackageMap{
+					Arch: map[string]map[string]string{
+						"amd64": {
+							"package1": "26.6.9",
+							"package4": "0.9.12",
+							"package5": "32.1.0",
+						},
 					},
 				},
 				addVersionDiff: true,
@@ -91,7 +100,7 @@ func TestComparer_getDiffs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			comp := &Comparer{}
-			d1, dv := comp.getDiffs(&tt.args.m1, &tt.args.m2, tt.args.addVersionDiff)
+			d1, dv := comp.getDiffs(tt.args.m1, tt.args.m2, tt.args.addVersionDiff)
 			for _, v := range d1 {
 				sort.Strings(v.Packages)
 			}

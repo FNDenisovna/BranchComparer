@@ -9,9 +9,11 @@ import (
 )
 
 type Comparer struct {
-	b1  string
-	b2  string
-	api Api
+	b1    string
+	b2    string
+	api   Api
+	p1map *domain.PackageMap
+	p2map *domain.PackageMap
 }
 
 type Api interface {
@@ -26,34 +28,31 @@ type Api interface {
 
 func New(_b1 string, _b2 string, _api Api) *Comparer {
 	return &Comparer{
-		b1:  _b1,
-		b2:  _b2,
-		api: _api,
+		b1:    _b1,
+		b2:    _b2,
+		api:   _api,
+		p1map: domain.New(),
+		p2map: domain.New(),
 	}
 }
-
-var (
-	p1map = make(map[string]map[string]string)
-	p2map = make(map[string]map[string]string)
-)
 
 func (c *Comparer) Compare() (resultJson []byte, err error) {
 	var wg sync.WaitGroup
 	wg.Add(2)
 
-	go func(pmap *map[string]map[string]string) {
+	go func(pmap *domain.PackageMap) {
 		p := make([]domain.Package, 0, 0)
 		p, err = c.api.GetPackages(c.b1)
 		err = c.doPackegeMap(pmap, p)
 		wg.Done()
-	}(&p1map)
+	}(c.p1map)
 
-	go func(pmap *map[string]map[string]string) {
+	go func(pmap *domain.PackageMap) {
 		p := make([]domain.Package, 0, 0)
 		p, err = c.api.GetPackages(c.b2)
 		err = c.doPackegeMap(pmap, p)
 		wg.Done()
-	}(&p2map)
+	}(c.p2map)
 
 	wg.Wait()
 	if err != nil {
@@ -69,12 +68,12 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 
 	wg.Add(2)
 	go func() {
-		resultStruct.DiffPackege1, resultStruct.DiffPackegeVer = c.getDiffs(&p1map, &p2map, true)
+		resultStruct.DiffPackege1, resultStruct.DiffPackegeVer = c.getDiffs(c.p1map, c.p2map, true)
 		wg.Done()
 	}()
 
 	go func() {
-		resultStruct.DiffPackege2, _ = c.getDiffs(&p2map, &p1map, false)
+		resultStruct.DiffPackege2, _ = c.getDiffs(c.p2map, c.p1map, false)
 		wg.Done()
 	}()
 
@@ -83,27 +82,27 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 	return
 }
 
-func (c *Comparer) doPackegeMap(pmap *map[string]map[string]string, ps []domain.Package) (err error) {
+func (c *Comparer) doPackegeMap(pmap *domain.PackageMap, ps []domain.Package) (err error) {
 	for _, p := range ps {
-		if arch, ok := (*pmap)[p.Arch]; ok {
+		if arch, ok := (pmap.Arch)[p.Arch]; ok {
 			if _, ok := arch[p.Name]; ok {
 				continue
 			} else {
 				arch[p.Name] = p.Version
 			}
 		} else {
-			(*pmap)[p.Arch] = make(map[string]string)
-			(*pmap)[p.Arch][p.Name] = p.Version
+			(pmap.Arch)[p.Arch] = make(map[string]string)
+			(pmap.Arch)[p.Arch][p.Name] = p.Version
 		}
 	}
 	return nil
 }
 
-func (c *Comparer) getDiffs(pm1 *map[string]map[string]string, pm2 *map[string]map[string]string, addVersionDiff bool) (diffPackege1 []Arch, diffPackegeVer []Arch) {
+func (c *Comparer) getDiffs(pm1 *domain.PackageMap, pm2 *domain.PackageMap, addVersionDiff bool) (diffPackege1 []Arch, diffPackegeVer []Arch) {
 	diffPackege1 = make([]Arch, 0)
 	diffPackegeVer = make([]Arch, 0)
 
-	for k, v1 := range *pm1 {
+	for k, v1 := range pm1.Arch {
 		arch := Arch{
 			Name:     k,
 			Packages: make([]string, 0),
@@ -113,7 +112,7 @@ func (c *Comparer) getDiffs(pm1 *map[string]map[string]string, pm2 *map[string]m
 			Packages: make([]string, 0),
 		}
 
-		if v2, ok := (*pm2)[k]; ok {
+		if v2, ok := (pm2.Arch)[k]; ok {
 			for p1, ver1 := range v1 {
 				if ver2, ok := v2[p1]; !ok {
 					arch.Packages = append(arch.Packages, p1)

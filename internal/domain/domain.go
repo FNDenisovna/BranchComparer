@@ -10,3 +10,13 @@ type Package struct {
 	//Buildtime int    `json:"buildtime"`
 	//Source    string `json:"source"`
 }
+
+type PackageMap struct {
+	Arch map[string]map[string]string
+}
+
+func New() *PackageMap {
+	return &PackageMap{
+		Arch: make(map[string]map[string]string),
+	}
+}
