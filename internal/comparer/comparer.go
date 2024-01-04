@@ -47,21 +47,23 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 	wg.Add(2)
 	var err1, err2 error
 	go func(pmap *domain.PackageMap) {
-		p, err1 := c.api.GetPackages(c.b1)
+		defer wg.Done()
+		var p []domain.Package
+		p, err1 = c.api.GetPackages(c.b1)
 		if err1 != nil {
 			return
 		}
 		err1 = c.doPackegeMap(pmap, p)
-		wg.Done()
 	}(c.p1map)
 
 	go func(pmap *domain.PackageMap) {
-		p, err2 := c.api.GetPackages(c.b2)
+		defer wg.Done()
+		var p []domain.Package
+		p, err2 = c.api.GetPackages(c.b2)
 		if err2 != nil {
 			return
 		}
 		err2 = c.doPackegeMap(pmap, p)
-		wg.Done()
 	}(c.p2map)
 
 	wg.Wait()
@@ -81,13 +83,13 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 
 	wg.Add(2)
 	go func() {
+		defer wg.Done()
 		resultStruct.DiffPackege1, resultStruct.DiffPackegeVer = c.getDiffs(c.p1map, c.p2map, true)
-		wg.Done()
 	}()
 
 	go func() {
+		defer wg.Done()
 		resultStruct.DiffPackege2, _ = c.getDiffs(c.p2map, c.p1map, false)
-		wg.Done()
 	}()
 
 	wg.Wait()

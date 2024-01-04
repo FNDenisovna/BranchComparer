@@ -58,12 +58,13 @@ func main() {
 
 	api := branchapi.New(url)
 	comp := comparer.New(branch1, branch2, api)
+	fmt.Println("Start comparing")
 	result, err := comp.Compare()
 	if err != nil {
 		fmt.Printf("Comparing is failed. Error: %v.\n", err)
 		return
 	}
-
+	fmt.Println("Finish comparing")
 	fmt.Println(string(result[:]))
 }
 
