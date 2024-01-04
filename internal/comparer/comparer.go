@@ -2,7 +2,7 @@ package comparer
 
 import (
 	"branchcomparer/internal/domain"
-	versioncomparer "branchcomparer/internal/versionComparer"
+	versioncomparer "branchcomparer/internal/versionComparer/v2"
 	"encoding/json"
 	"fmt"
 	"sync"
@@ -101,7 +101,7 @@ func (c *Comparer) doPackegeMap(pmap *domain.PackageMap, ps []domain.Package) (e
 			if _, ok := arch[p.Name]; ok {
 				continue
 			} else {
-				arch[p.Name] = p.Version
+				arch[p.Name] = fmt.Sprintf("%d:%s-%s", p.Epoch, p.Version, p.Release)
 			}
 		} else {
 			(pmap.Arch)[p.Arch] = make(map[string]string)
@@ -133,7 +133,7 @@ func (c *Comparer) getDiffs(pm1 *domain.PackageMap, pm2 *domain.PackageMap, addV
 					if addVersionDiff {
 						compRes, err := versioncomparer.Compare(ver1, ver2)
 						if err != nil {
-							fmt.Printf("Can't compare versions: %s, %s. Arch: %v, package: %v\n", ver1, ver2, k, p1)
+							fmt.Printf("Can't compare versions: %s, %s. Arch: %v, package: %v. Error: \n%v\n", ver1, ver2, k, p1, err)
 							continue
 						}
 						if compRes > 0 {
