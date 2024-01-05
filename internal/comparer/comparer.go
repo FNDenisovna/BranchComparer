@@ -12,6 +12,10 @@ type Comparer struct {
 	b1    string
 	b2    string
 	api   Api
+	bpMap *BranchesPackageMap
+}
+
+type BranchesPackageMap struct {
 	mu    sync.RWMutex
 	p1map *domain.PackageMap
 	p2map *domain.PackageMap
@@ -23,11 +27,13 @@ type Api interface {
 
 func New(_b1 string, _b2 string, _api Api) *Comparer {
 	return &Comparer{
-		b1:    _b1,
-		b2:    _b2,
-		api:   _api,
-		p1map: domain.New(),
-		p2map: domain.New(),
+		b1:  _b1,
+		b2:  _b2,
+		api: _api,
+		bpMap: &BranchesPackageMap{
+			p1map: domain.New(),
+			p2map: domain.New(),
+		},
 	}
 }
 
@@ -54,7 +60,7 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 			return
 		}
 		err1 = c.doPackegeMap(pmap, p)
-	}(c.p1map)
+	}(c.bpMap.p1map)
 
 	go func(pmap *domain.PackageMap) {
 		defer wg.Done()
@@ -64,7 +70,7 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 			return
 		}
 		err2 = c.doPackegeMap(pmap, p)
-	}(c.p2map)
+	}(c.bpMap.p2map)
 
 	wg.Wait()
 	if err1 != nil {
@@ -84,12 +90,16 @@ func (c *Comparer) Compare() (resultJson []byte, err error) {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		resultStruct.DiffPackege1, resultStruct.DiffPackegeVer = c.getDiffs(c.p1map, c.p2map, true)
+		c.bpMap.mu.RLock()
+		defer c.bpMap.mu.RUnlock()
+		resultStruct.DiffPackege1, resultStruct.DiffPackegeVer = c.getDiffs(c.bpMap.p1map, c.bpMap.p2map, true)
 	}()
 
 	go func() {
 		defer wg.Done()
-		resultStruct.DiffPackege2, _ = c.getDiffs(c.p2map, c.p1map, false)
+		c.bpMap.mu.RLock()
+		defer c.bpMap.mu.RUnlock()
+		resultStruct.DiffPackege2, _ = c.getDiffs(c.bpMap.p2map, c.bpMap.p1map, false)
 	}()
 
 	wg.Wait()
