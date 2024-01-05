@@ -10,12 +10,12 @@ import (
 )
 
 type BranchApi struct {
-	url string
+	Url string
 }
 
-func New(url string) *BranchApi {
+func New() *BranchApi {
 	return &BranchApi{
-		url: url,
+		Url: "https://rdb.altlinux.org/api/export/branch_binary_packages/",
 	}
 }
 
@@ -28,9 +28,9 @@ func (ba *BranchApi) GetPackages(branch string) ([]domain.Package, error) {
 	client := &http.Client{
 		Timeout: 10 * time.Second,
 	}
-	r, err := client.Get(ba.url + branch)
+	r, err := client.Get(ba.Url + branch)
 	if err != nil {
-		err = fmt.Errorf("Request to url (%s) is failed. Error: %w", ba.url, err)
+		err = fmt.Errorf("Request to url (%s) is failed. Error: %w", ba.Url, err)
 		return nil, err
 	}
 	defer r.Body.Close()

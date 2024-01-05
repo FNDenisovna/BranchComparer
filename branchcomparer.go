@@ -27,7 +27,6 @@ var Branches = map[string]struct{}{
 var (
 	branch1 string
 	branch2 string
-	url     string
 )
 
 type ExtComparerType struct{}
@@ -38,8 +37,6 @@ func init() {
 	flag.StringVar(&branch1, "branch1", "sisyphus", "First branch for compare")
 	flag.StringVar(&branch2, "branch2", "p10", "First branch for compare")
 	flag.Parse()
-
-	url = "https://rdb.altlinux.org/api/export/branch_binary_packages/"
 }
 
 func main() {
@@ -56,7 +53,7 @@ func main() {
 	fmt.Printf("branch1 = %v\n", branch1)
 	fmt.Printf("branch2 = %v\n", branch2)
 
-	api := branchapi.New(url)
+	api := branchapi.New()
 	comp := comparer.New(branch1, branch2, api)
 	fmt.Println("Start comparing")
 	result, err := comp.Compare()
@@ -83,7 +80,6 @@ func checkBranch(b string, name string) (err error) {
 func (ec ExtComparerType) Compare(b1 string, b2 string) (string, error) {
 	branch1 = b1
 	branch2 = b2
-	url = "https://rdb.altlinux.org/api/export/branch_binary_packages/"
 
 	if err := checkBranch(branch1, "branch1"); err != nil {
 		return "", err
@@ -96,12 +92,11 @@ func (ec ExtComparerType) Compare(b1 string, b2 string) (string, error) {
 	fmt.Printf("branch1 = %v\n", branch1)
 	fmt.Printf("branch2 = %v\n", branch2)
 
-	api := branchapi.New(url)
+	api := branchapi.New()
 	comp := comparer.New(branch1, branch2, api)
 	result, err := comp.Compare()
 	if err != nil {
 		return "", fmt.Errorf("Comparing is failed. Error: %v.\n", err)
-
 	}
 
 	return string(result[:]), nil

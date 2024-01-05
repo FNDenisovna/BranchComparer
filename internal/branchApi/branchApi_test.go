@@ -17,14 +17,14 @@ func TestBranchapi_GetPackages(t *testing.T) {
 	}{
 		{
 			name:      "Ok1",
-			args:      args{branch: "sisyphus", url: "https://rdb.altlinux.org/api/export/branch_binary_packages/"},
-			wantCount: 186120,
+			args:      args{branch: "sisyphus"},
+			wantCount: 186260,
 			wantErr:   false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ba := New(tt.args.url)
+			ba := New()
 			ps, err := ba.GetPackages(tt.args.branch)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetPackages() return error = %v, wantErr %v", err, tt.wantErr)
